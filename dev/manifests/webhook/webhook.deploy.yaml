@@ -16,7 +16,7 @@ spec:
         app: security-webhook
     spec:
       containers:
-        - image: localhost:5000/webhook:0.2.0
+        - image: localhost:5000/sc-webhook:0.2.0
           imagePullPolicy: Always
           name: security-webhook
           env:
