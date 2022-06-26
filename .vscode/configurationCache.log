@@ -1,1 +1,0 @@
-{"buildTargets":["bad-pod","build","cluster","delete","delete-all","delete-bad-pod","delete-cluster","delete-config","delete-pod","deploy","deploy-config","docker-build","logs","pod","push","taint","test"],"launchTargets":[],"customConfigurationProvider":{"workspaceBrowse":{"browsePath":[],"compilerArgs":[]},"fileIndex":[]}}
