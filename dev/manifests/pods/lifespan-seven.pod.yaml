@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    dx.rtx.com/security-requested: "true"
+  name: dx-secure
+  namespace: apps
+spec:
+  containers:
+    - args:
+        - sleep
+        - "3600"
+      image: busybox
+      name: dx-secure
+  restartPolicy: Always
