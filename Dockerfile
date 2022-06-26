@@ -1,6 +1,5 @@
-# syntax=docker/dockerfile:experimental
-# ---
 FROM golang:1.16 AS build
+LABEL maintainer="Mitch Murphy <mitch.murphy@gmail.com>"
 
 ENV GOOS=linux
 ENV GOARCH=amd64
