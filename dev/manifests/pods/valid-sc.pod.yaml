@@ -1,15 +1,12 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  name: secure-pod
+  name: secure-nginx
   namespace: apps
 spec:
   securityContext:
     runAsNonRoot: true
   containers:
-    - args:
-        - sleep
-        - "3600"
-      image: busybox
-      name: secure-container
-  restartPolicy: Always
+  - name: nginx
+    image: localhost:5000/my-nginx:latest
+  restartPolicy: Never

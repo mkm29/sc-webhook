@@ -1,13 +1,10 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  name: insecure-pod
+  name: insecure-nginx
   namespace: apps
 spec:
   containers:
-    - args:
-        - sleep
-        - "3600"
-      image: busybox
-      name: insecure-container
-  restartPolicy: Always
+  - name: nginx
+    image: nginx
+  restartPolicy: Never
