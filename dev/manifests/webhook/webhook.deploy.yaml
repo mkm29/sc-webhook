@@ -2,27 +2,23 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: simple-kubernetes-webhook
-  name: simple-kubernetes-webhook
+    app: security-webhook
+  name: security-webhook
   namespace: default
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: simple-kubernetes-webhook
+      app: security-webhook
   template:
     metadata:
       labels:
-        app: simple-kubernetes-webhook
+        app: security-webhook
     spec:
-      tolerations:
-        - key: dx.rtx.com/security-remaining
-          operator: Exists
-          effect: NoSchedule
       containers:
-        - image: localhost:5000/webhook:0.1.0
+        - image: localhost:5000/webhook:0.2.0
           imagePullPolicy: Always
-          name: simple-kubernetes-webhook
+          name: security-webhook
           env:
             - name: TLS
               value: "true"
@@ -37,4 +33,4 @@ spec:
       volumes:
         - name: tls
           secret:
-            secretName: simple-kubernetes-webhook-tls
+            secretName: security-webhook-tls
