@@ -44,7 +44,7 @@ _Note_ steps 5-7 apply to security context validation, see steps 8-11 for image 
   > `kubectl run flask --image localhost:5000/my-flask:latest --restart Never --namespace apps`  
   > `kubectl get po flask -n apps -o jsonpath='{.spec.securityContext}'`  
 
-8. Here we only allow Pods that have a source image that comes from an approved registry. Please note that the binary needs to get the source registry base URL from the environment, this is coded as a build argument in the `Dockerfile`. it defaults to Docker Hub, please override it like: `docker build -t sc-webhook:0.3.1 --build-arg "REGISTRY_BASE_URL=localhost:5000" .`  
+8. Here we only allow Pods that have a source image that comes from an approved registry. Please note that the binary needs to get the source registry base URL from the environment, this is coded as a build argument in the `Dockerfile`. it defaults to Docker Hub, please override it like: `docker build -t sc-webhook:0.3.1 --build-arg "REGISTRY=localhost:5000" .`  
 
 9. In order for this validating webhook to take effect, you need to build/push the container and then update the deployment (make sure to scale the deployment to 0 and back to 1, otherwise it will not reference the new image).  
 
