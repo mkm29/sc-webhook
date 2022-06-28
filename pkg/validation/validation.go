@@ -41,7 +41,8 @@ func (v *Validator) ValidatePod(pod *corev1.Pod) (validation, error) {
 
 	// list of all validations to be applied to the pod
 	validations := []podValidator{
-		securityContextValidator{v.Logger},
+		imageValidator{v.Logger},
+		// securityContextValidator{v.Logger},
 	}
 
 	// apply all validations

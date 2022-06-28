@@ -1,6 +1,7 @@
 package validation
 
 import (
+	"fmt"
 	"io/ioutil"
 	"testing"
 
@@ -11,6 +12,10 @@ import (
 )
 
 func TestValidatePod(t *testing.T) {
+	ev, ok := GetRegistry()
+	if !ok {
+		t.Errorf("%s environment variable is not set", REGISTRY_BASE_URL)
+	}
 	v := NewValidator(logger())
 	trueVal := true
 
@@ -21,7 +26,7 @@ func TestValidatePod(t *testing.T) {
 		Spec: corev1.PodSpec{
 			Containers: []corev1.Container{{
 				Name:  "secure-container",
-				Image: "busybox",
+				Image: fmt.Sprintf("%s/busybox", ev),
 			}},
 			SecurityContext: &corev1.PodSecurityContext{
 				RunAsNonRoot: &trueVal,
@@ -32,6 +37,13 @@ func TestValidatePod(t *testing.T) {
 	val, err := v.ValidatePod(pod)
 	assert.Nil(t, err)
 	assert.True(t, val.Valid)
+
+	// change the image to a bad image
+	pod.Spec.Containers[0].Image = "nginx"
+
+	val, err = v.ValidatePod(pod)
+	assert.Nil(t, err)
+	assert.False(t, val.Valid)
 }
 
 func logger() *logrus.Entry {

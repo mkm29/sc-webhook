@@ -1,17 +1,20 @@
 #!/bin/bash
 
+SVC_NAME=security-webhook
+NAMESPACE=default
+
 openssl genrsa -out ca.key 2048
 
 openssl req -new -x509 -days 365 -key ca.key \
-  -subj "/C=AU/CN=security-webhook"\
+  -subj "/C=AU/CN=$SVC_NAME"\
   -out ca.crt
 
 openssl req -newkey rsa:2048 -nodes -keyout server.key \
-  -subj "/C=AU/CN=security-webhook" \
+  -subj "/C=AU/CN=$SVC_NAME" \
   -out server.csr
 
 openssl x509 -req \
-  -extfile <(printf "subjectAltName=DNS:security-webhook.default.svc") \
+  -extfile <(printf "subjectAltName=DNS:$SVC_NAME.$NAMESPACE.svc") \
   -days 365 \
   -in server.csr \
   -CA ca.crt -CAkey ca.key -CAcreateserial \
@@ -19,7 +22,7 @@ openssl x509 -req \
 
 echo
 echo ">> Generating kube secrets..."
-kubectl create secret tls security-webhook-tls \
+kubectl create secret tls $SVC_NAME-tls \
   --cert=server.crt \
   --key=server.key \
   --dry-run=client -o yaml \
