@@ -1,11 +1,11 @@
-# SecurityContext Kubernetes Admission Webhook
+# Security Kubernetes Admission Webhook
 
 ```yaml
 Author: Mitch Murphy
 Date: 2022-06-26
 ```
 
-The following contains a simple Go application that both validates and mutates incoming Pod creation requests to ensure that no Pod is run as root.  
+The following contains a simple Go application that both validates and mutates incoming Pod creation requests to ensure that no Pod is run as root, as well as all container images come from an approved registry.  
 
 ## Setup
 
