@@ -27,6 +27,8 @@ There are a few things that must be done in order to configure your Kubernetes c
 
   > `kubectl apply -f ./dev/manifests/cluser-config/apps.ns.yaml`  
 
+_Note_ steps 5-7 apply to security context validation, see steps 8-11 for image source validation.
+
 5. Try running an NGINX Pod and observe what happens. Since NGINX listens on ports 80/443 (protected) it must run as root, therefore after deploying you will notice that it adds the security context to our Pod, however, it will not be able to run.  
 
   > `kubectl run root-nginx --image nginx --restart Never --namespace apps`  
@@ -40,4 +42,18 @@ There are a few things that must be done in order to configure your Kubernetes c
 7. I have also included a little Flask app (and [Dockerfile](dev/flask/Dockerfile)). One thing to note that in all Docker files you need to change the permissions on certain directories, as well as changing the running user with the `USER` statement (this must be the numeric value for the user). Note that in the NGINX case the creators already created an nginx user, you just need to configure it to use that.
 
   > `kubectl run flask --image localhost:5000/my-flask:latest --restart Never --namespace apps`  
-  > `kubectl get po flask -n apps -o jsonpath='{.spec.securityContext}'` 
+  > `kubectl get po flask -n apps -o jsonpath='{.spec.securityContext}'`  
+
+8. Here we only allow Pods that have a source image that comes from an approved registry. Please note that the binary needs to get the source registry base URL from the environment, this is coded as a build argument in the `Dockerfile`. it defaults to Docker Hub, please override it like: `docker build -t sc-webhook:0.3.1 --build-arg "REGISTRY_BASE_URL=localhost:5000" .`  
+
+9. In order for this validating webhook to take effect, you need to build/push the container and then update the deployment (make sure to scale the deployment to 0 and back to 1, otherwise it will not reference the new image).  
+
+```shell
+kubectl set image deployment/security-webhook security-webhook=localhost:5000/sc-webhook:0.3.1
+kubectl scale deployment/security-webhook --replicas 0
+kubectl scale deployment/security-webhook --replicas 1
+```  
+
+10. Now test it out by deploying something from Docker Hub: `kubectl run no-bueno --image nginx --namespace apps --restart Never`. In the webhooks are properly deployed you will get a rejection error.  
+
+11. Make sure it works by deploying the previously pushed NGINX image (to our local registry). `kubectl run bueno --image localhost:5000/nginx --namespace apps --restart Never`  
