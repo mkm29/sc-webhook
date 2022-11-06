@@ -11,6 +11,7 @@ import (
 func TestNSecurityContextValidatorValidate(t *testing.T) {
 	t.Run("valid security context", func(t *testing.T) {
 		trueVal := true
+		falseVal := false
 		pod := &corev1.Pod{
 			ObjectMeta: v1.ObjectMeta{
 				Name: "securePod",
@@ -19,11 +20,12 @@ func TestNSecurityContextValidatorValidate(t *testing.T) {
 				Containers: []corev1.Container{{
 					Name:  "secureContainer",
 					Image: "busybox",
+					SecurityContext: &corev1.SecurityContext{
+						RunAsNonRoot:             &trueVal,
+						AllowPrivilegeEscalation: &falseVal,
+						Privileged:               &falseVal,
+					},
 				}},
-				// add a security context to the pod
-				SecurityContext: &corev1.PodSecurityContext{
-					RunAsNonRoot: &trueVal,
-				},
 			},
 		}
 

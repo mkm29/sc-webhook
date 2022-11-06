@@ -10,16 +10,22 @@ import (
 
 func TestInjectSecurityContextMutate(t *testing.T) {
 	trueVal := true
+	falseVal := false
 	want := &corev1.Pod{
 		ObjectMeta: v1.ObjectMeta{
 			Name: "test",
 		},
 		Spec: corev1.PodSpec{
-			SecurityContext: &corev1.PodSecurityContext{
-				RunAsNonRoot: &trueVal,
-			},
+			// SecurityContext: &corev1.PodSecurityContext{
+			// 	RunAsNonRoot: &trueVal,
+			// },
 			Containers: []corev1.Container{{
 				Name: "test",
+				SecurityContext: &corev1.SecurityContext{
+					AllowPrivilegeEscalation: &falseVal,
+					Privileged:               &falseVal,
+					RunAsNonRoot:             &trueVal,
+				},
 			}},
 		},
 	}
@@ -45,9 +51,15 @@ func TestInjectSecurityContextMutate(t *testing.T) {
 
 func TestHasSecurityContext(t *testing.T) {
 	trueVal := true
+	falseVal := false
 	c := corev1.Container{
 		Name:  "test",
 		Image: "busybox",
+		SecurityContext: &corev1.SecurityContext{
+			AllowPrivilegeEscalation: &falseVal,
+			RunAsNonRoot:             &trueVal,
+			Privileged:               &falseVal,
+		},
 	}
 
 	// create Pod spec
@@ -56,7 +68,12 @@ func TestHasSecurityContext(t *testing.T) {
 			Name: "test",
 		},
 		Spec: corev1.PodSpec{
-			Containers: []corev1.Container{c},
+			Containers: []corev1.Container{
+				corev1.Container{
+					Name:  "test",
+					Image: "busybox",
+				},
+			},
 		},
 	}
 	// create new Pod spec with security context
@@ -66,9 +83,6 @@ func TestHasSecurityContext(t *testing.T) {
 		},
 		Spec: corev1.PodSpec{
 			Containers: []corev1.Container{c},
-			SecurityContext: &corev1.PodSecurityContext{
-				RunAsNonRoot: &trueVal,
-			},
 		},
 	}
 

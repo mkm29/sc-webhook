@@ -19,6 +19,6 @@ ARG REGISTRY="docker.io"
 
 COPY --from=build /work/bin/admission-webhook /usr/local/bin/
 
-ENV REGISTRY_BASE_URL="$REGISTRY"
+ENV REGISTRY="$REGISTRY"
 
 CMD ["admission-webhook"]

@@ -2,8 +2,8 @@ package validation
 
 import (
 	"encoding/json"
-	"fmt"
 
+	"github.com/mkm29/sc-webhook/pkg/mutation"
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 )
@@ -41,20 +41,13 @@ func (n securityContextValidator) Name() string {
 // The returned validation is only valid if the pod has a valid security context
 // that is configured to not run as root
 func (n securityContextValidator) Validate(pod *corev1.Pod) (validation, error) {
-	v := validation{}
-	if pod.Spec.SecurityContext == nil {
-		v.Valid = false
-		v.Reason = fmt.Sprintf("pod %s has no security context", pod.Name)
-		return v, nil
+	hasSC := mutation.HasValidSecurityContext(pod)
+	if !hasSC {
+		return validation{Valid: false, Reason: "pod does not have a valid security context"}, nil
 	}
-	if pod.Spec.SecurityContext.RunAsNonRoot == nil {
-		v.Valid = false
-		v.Reason = fmt.Sprintf("pod %s has no security context.RunAsNonRoot", pod.Name)
-		return v, nil
-	} else if *pod.Spec.SecurityContext.RunAsNonRoot == false {
-		v.Valid = false
-		v.Reason = fmt.Sprintf("pod %s has security context.RunAsNonRoot set to true", pod.Name)
-		return v, nil
-	}
-	return validation{Valid: true, Reason: "pod has a security context"}, nil
+	return validation{Valid: true, Reason: "pod has a valid security context"}, nil
+}
+
+func HasValidSecurityContext(pod *corev1.Pod) {
+	panic("unimplemented")
 }

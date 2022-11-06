@@ -12,12 +12,12 @@ import (
 
 func TestNImageValidatorValidate(t *testing.T) {
 	t.Run("valid image sources", func(t *testing.T) {
-		// set the REGISTRY_BASE_URL environment variable
+		// set the REGISTRY environment variable
 		ev, ok := GetRegistry()
 		if !ok {
-			t.Errorf("%s environment variable is not set", REGISTRY_BASE_URL)
+			t.Errorf("%s environment variable is not set", REGISTRY)
 		}
-		os.Setenv(REGISTRY_BASE_URL, ev)
+		os.Setenv(REGISTRY, ev)
 		containers := []corev1.Container{
 			{
 				Name:  "good-container-1",
@@ -45,9 +45,9 @@ func TestNImageValidatorValidate(t *testing.T) {
 	t.Run("image not from an approved registry", func(t *testing.T) {
 		ev, ok := GetRegistry()
 		if !ok {
-			t.Errorf("%s environment variable is not set", REGISTRY_BASE_URL)
+			t.Errorf("%s environment variable is not set", REGISTRY)
 		}
-		os.Setenv(REGISTRY_BASE_URL, ev)
+		os.Setenv(REGISTRY, ev)
 		// define 2 containers
 		containers := []corev1.Container{
 			{

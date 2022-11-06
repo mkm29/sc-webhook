@@ -14,7 +14,7 @@ import (
 func TestValidatePod(t *testing.T) {
 	ev, ok := GetRegistry()
 	if !ok {
-		t.Errorf("%s environment variable is not set", REGISTRY_BASE_URL)
+		t.Errorf("%s environment variable is not set", REGISTRY)
 	}
 	v := NewValidator(logger())
 	trueVal := true

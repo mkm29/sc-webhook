@@ -16,15 +16,15 @@ func main() {
 	setLogger()
 
 	// handle our core application
-	http.HandleFunc("/validate-pods", ServeValidatePods)
-	http.HandleFunc("/mutate-pods", ServeMutatePods)
+	http.HandleFunc("/validate", ServeValidatePods)
+	http.HandleFunc("/mutate", ServeMutatePods)
 	http.HandleFunc("/health", ServeHealth)
 
 	// start the server
 	// listens to clear text http on port 8080 unless TLS env var is set to "true"
 	if os.Getenv("TLS") == "true" {
-		cert := "/etc/admission-webhook/tls/tls.crt"
-		key := "/etc/admission-webhook/tls/tls.key"
+		cert := "/etc/webhook/certs/cert.pem"
+		key := "/etc/webhook/certs/key.pem"
 		logrus.Print("Listening on port 443...")
 		logrus.Fatal(http.ListenAndServeTLS(":443", cert, key, nil))
 	} else {

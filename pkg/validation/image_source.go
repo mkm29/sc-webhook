@@ -9,7 +9,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-const REGISTRY_BASE_URL = "REGISTRY_BASE_URL"
+const REGISTRY = "REGISTRY"
 
 // imageValidator is a container for validating the name of pods
 type imageValidator struct {
@@ -24,10 +24,10 @@ func (n imageValidator) Name() string {
 	return "image_source_validator"
 }
 
-// get REGISTRY_BASE_URL from environment variable
+// get REGISTRY from environment variable
 func GetRegistry() (string, bool) {
 	// first see if the key is present
-	val, ok := os.LookupEnv(REGISTRY_BASE_URL)
+	val, ok := os.LookupEnv(REGISTRY)
 	if !ok {
 		return "", false
 	}
@@ -42,13 +42,13 @@ func (n imageValidator) Validate(pod *corev1.Pod) (validation, error) {
 	// get approved registry from environment variable
 	registry, ok := GetRegistry()
 	if !ok {
-		return v, fmt.Errorf(fmt.Sprintf("%s environment variable is not set", REGISTRY_BASE_URL))
+		return v, fmt.Errorf(fmt.Sprintf("%s environment variable is not set", REGISTRY))
 	}
 	// check if the image comes from a certain registry
 	for _, container := range pod.Spec.Containers {
 		if !strings.Contains(container.Image, registry) {
 			v.Valid = false
-			v.Reason = "Image source is not from approved registry"
+			v.Reason = fmt.Sprintf("Image is not from approved registry: %s", container.Image)
 			return v, nil
 		}
 	}

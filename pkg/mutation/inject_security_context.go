@@ -9,6 +9,10 @@ func NewTrue() *bool {
 	b := true
 	return &b
 }
+func NewFalse() *bool {
+	b := false
+	return &b
+}
 
 // injectSecurityContext is a container for the mutation injecting environment vars
 type injectSecurityContext struct {
@@ -27,9 +31,12 @@ func (sc injectSecurityContext) Name() string {
 func (sc injectSecurityContext) Mutate(pod *corev1.Pod) (*corev1.Pod, error) {
 	sc.Logger = sc.Logger.WithField("mutation", sc.Name())
 	mpod := pod.DeepCopy()
-	// create a pod security context
-	securityContext := corev1.PodSecurityContext{
-		RunAsNonRoot: NewTrue(),
+
+	// this needs to be done on the Pod level, not the container level
+	securityContext := corev1.SecurityContext{
+		Privileged:               NewFalse(),
+		RunAsNonRoot:             NewTrue(),
+		AllowPrivilegeEscalation: NewFalse(),
 	}
 
 	// inject env vars into pod
@@ -40,21 +47,34 @@ func (sc injectSecurityContext) Mutate(pod *corev1.Pod) (*corev1.Pod, error) {
 }
 
 // injectSecurityContextVar injects a var in both containers and init containers of a pod
-func injectValidSecurityContext(pod *corev1.Pod, sc corev1.PodSecurityContext) {
+func injectValidSecurityContext(pod *corev1.Pod, sc corev1.SecurityContext) {
 	if !HasValidSecurityContext(pod) {
-		pod.Spec.SecurityContext = &sc
+		// inject the security context into each container
+		for i := range pod.Spec.Containers {
+			pod.Spec.Containers[i].SecurityContext = &sc
+		}
 	}
 }
 
 // HasEnvVar returns true if environment variable exists false otherwise
 func HasValidSecurityContext(pod *corev1.Pod) bool {
+	// security context can exist on 2 levels: pod and containers
+	hasSc := false
 	// check if Pod has a security context
-	if pod.Spec.SecurityContext == nil {
-		return false
-	}
 	// check that the security context has a run as non root value
-	if pod.Spec.SecurityContext.RunAsNonRoot == nil || *pod.Spec.SecurityContext.RunAsNonRoot == false {
-		return false
+	// if !*pod.Spec.SecurityContext.RunAsNonRoot {
+	// 	hasSc = true
+	// }
+	// check if containers have a security context
+	for i := range pod.Spec.Containers {
+		// *pod.Spec.Containers[i].SecurityContext.RunAsNonRoot && *pod.Spec.Containers[i].SecurityContext.Privileged && *pod.Spec.Containers[i].SecurityContext.AllowPrivilegeEscalation
+		if pod.Spec.Containers[i].SecurityContext != nil {
+			if pod.Spec.Containers[i].SecurityContext.RunAsNonRoot != nil && pod.Spec.Containers[i].SecurityContext.Privileged != nil && pod.Spec.Containers[i].SecurityContext.AllowPrivilegeEscalation != nil {
+				hasSc = true
+				continue
+			}
+		}
 	}
-	return true
+
+	return hasSc
 }
