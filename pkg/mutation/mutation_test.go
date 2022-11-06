@@ -54,8 +54,8 @@ func pod() *corev1.Pod {
 
 func patch() string {
 	patch := `[
-			{"op":"add","path":"/spec/securityContext","value":
-				{"runAsNonRoot":true}
+			{"op":"add","path":"/spec/containers/0/securityContext","value":
+				{"allowPrivilegeEscalation":false,"privileged":false,"runAsNonRoot":true}
 			}
 ]`
 

@@ -12,15 +12,15 @@ import (
 const REGISTRY = "REGISTRY"
 
 // imageValidator is a container for validating the name of pods
-type imageValidator struct {
+type ImageValidator struct {
 	Logger logrus.FieldLogger
 }
 
 // imageValidator implements the podValidator interface
-var _ podValidator = (*imageValidator)(nil)
+var _ PodValidator = (*ImageValidator)(nil)
 
 // Name returns the name of imageValidator
-func (n imageValidator) Name() string {
+func (n ImageValidator) Name() string {
 	return "image_source_validator"
 }
 
@@ -37,7 +37,7 @@ func GetRegistry() (string, bool) {
 // Validate inspects the security context of a given pod and returns validation.
 // The returned validation is only valid if the pod has a valid security context
 // that is configured to not run as root
-func (n imageValidator) Validate(pod *corev1.Pod) (validation, error) {
+func (n ImageValidator) Validate(pod *corev1.Pod) (validation, error) {
 	v := validation{}
 	// get approved registry from environment variable
 	registry, ok := GetRegistry()

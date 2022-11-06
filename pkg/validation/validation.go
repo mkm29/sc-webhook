@@ -16,7 +16,7 @@ func NewValidator(logger *logrus.Entry) *Validator {
 }
 
 // podValidators is an interface used to group functions mutating pods
-type podValidator interface {
+type PodValidator interface {
 	Validate(*corev1.Pod) (validation, error)
 	Name() string
 }
@@ -27,7 +27,7 @@ type validation struct {
 }
 
 // ValidatePod returns true if a pod is valid
-func (v *Validator) ValidatePod(pod *corev1.Pod) (validation, error) {
+func (v *Validator) ValidatePod(pod *corev1.Pod, validations []PodValidator) (validation, error) {
 	var podName string
 	if pod.Name != "" {
 		podName = pod.Name
@@ -40,10 +40,10 @@ func (v *Validator) ValidatePod(pod *corev1.Pod) (validation, error) {
 	log.Print("delete me")
 
 	// list of all validations to be applied to the pod
-	validations := []podValidator{
-		imageValidator{v.Logger},
-		// securityContextValidator{v.Logger},
-	}
+	// validations := []podValidator{
+	// 	imageValidator{v.Logger},
+	// 	// securityContextValidator{v.Logger},
+	// }
 
 	// apply all validations
 	for _, v := range validations {
