@@ -13,11 +13,11 @@ import (
 func TestNImageValidatorValidate(t *testing.T) {
 	t.Run("valid image sources", func(t *testing.T) {
 		// set the REGISTRY environment variable
+		os.Setenv(REGISTRY, "private.docker.io")
 		ev, ok := GetRegistry()
 		if !ok {
 			t.Errorf("%s environment variable is not set", REGISTRY)
 		}
-		os.Setenv(REGISTRY, ev)
 		containers := []corev1.Container{
 			{
 				Name:  "good-container-1",
@@ -37,12 +37,13 @@ func TestNImageValidatorValidate(t *testing.T) {
 			},
 		}
 
-		v, err := imageValidator{logger()}.Validate(pod)
+		v, err := ImageValidator{logger()}.Validate(pod)
 		assert.Nil(t, err)
 		assert.True(t, v.Valid)
 	})
 
 	t.Run("image not from an approved registry", func(t *testing.T) {
+		os.Setenv(REGISTRY, "private.docker.io")
 		ev, ok := GetRegistry()
 		if !ok {
 			t.Errorf("%s environment variable is not set", REGISTRY)
@@ -68,7 +69,7 @@ func TestNImageValidatorValidate(t *testing.T) {
 			},
 		}
 
-		v, err := securityContextValidator{logger()}.Validate(pod)
+		v, err := SecurityContextValidator{logger()}.Validate(pod)
 		assert.Nil(t, err)
 		assert.False(t, v.Valid)
 	})

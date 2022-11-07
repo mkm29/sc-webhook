@@ -29,7 +29,7 @@ func TestNSecurityContextValidatorValidate(t *testing.T) {
 			},
 		}
 
-		v, err := securityContextValidator{logger()}.Validate(pod)
+		v, err := SecurityContextValidator{logger()}.Validate(pod)
 		assert.Nil(t, err)
 		assert.True(t, v.Valid)
 	})
@@ -47,7 +47,7 @@ func TestNSecurityContextValidatorValidate(t *testing.T) {
 			},
 		}
 
-		v, err := securityContextValidator{logger()}.Validate(pod)
+		v, err := SecurityContextValidator{logger()}.Validate(pod)
 		assert.Nil(t, err)
 		assert.False(t, v.Valid)
 	})
