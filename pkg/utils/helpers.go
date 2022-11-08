@@ -1,6 +1,9 @@
 package utils
 
 import (
+	"os"
+	"strings"
+
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -25,4 +28,25 @@ func HasValidSecurityContext(pod *corev1.Pod) bool {
 	}
 
 	return hasSc
+}
+
+// get REGISTRY from environment variable
+func GetEnvironmentVariable(ev string) (string, bool) {
+	// first see if the key is present
+	val, ok := os.LookupEnv(ev)
+	if !ok {
+		return "", false
+	}
+	return val, true
+}
+
+// Get list of excluded namespaces from environment variable
+func GetExcludedNamespaces() []string {
+	// get environment variable: EXCLUDED_NAMESPACES
+	val, ok := GetEnvironmentVariable("EXCLUDED_NAMESPACES")
+	if !ok {
+		return []string{"kube-system", "kube-public", "kube-node-lease"}
+	}
+	// split the string by comma
+	return strings.Split(val, ",")
 }

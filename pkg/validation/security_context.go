@@ -2,6 +2,7 @@ package validation
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/mkm29/sc-webhook/pkg/utils"
 	"github.com/sirupsen/logrus"
@@ -41,6 +42,14 @@ func (n SecurityContextValidator) Name() string {
 // The returned validation is only valid if the pod has a valid security context
 // that is configured to not run as root
 func (n SecurityContextValidator) Validate(pod *corev1.Pod) (validation, error) {
+	// get list of namespaces to ignore
+	xns := utils.GetExcludedNamespaces()
+	// check if the pod is in the excluded namespaces
+	for _, ns := range xns {
+		if pod.ObjectMeta.Namespace == ns {
+			return validation{Valid: true, Reason: fmt.Sprintf("pod is in protected namespace: %s", ns)}, nil
+		}
+	}
 	hasSC := utils.HasValidSecurityContext(pod)
 	if !hasSC {
 		return validation{Valid: false, Reason: "pod does not have a valid security context"}, nil

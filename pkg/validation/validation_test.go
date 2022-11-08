@@ -15,10 +15,7 @@ import (
 func TestValidatePodImage(t *testing.T) {
 	// set REGISTRY env var
 	os.Setenv("REGISTRY", "docker.io")
-	ev, ok := GetRegistry()
-	if !ok {
-		t.Errorf("%s environment variable is not set", REGISTRY)
-	}
+	ev := getRegistry()
 	v := NewValidator(logger())
 
 	pod := &corev1.Pod{

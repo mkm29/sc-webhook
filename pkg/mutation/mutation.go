@@ -3,6 +3,7 @@ package mutation
 import (
 	"encoding/json"
 
+	"github.com/mkm29/sc-webhook/pkg/utils"
 	"github.com/sirupsen/logrus"
 	"github.com/wI2L/jsondiff"
 	corev1 "k8s.io/api/core/v1"
@@ -27,6 +28,17 @@ type podMutator interface {
 // MutatePodPatch returns a json patch containing all the mutations needed for
 // a given pod
 func (m *Mutator) MutatePodPatch(pod *corev1.Pod) ([]byte, error) {
+	// check Pod namespace and if in excluded namespaces, return
+	// get list of namespaces to ignore
+	xns := utils.GetExcludedNamespaces()
+	// check if the pod is in the excluded namespaces
+	for _, ns := range xns {
+		if pod.ObjectMeta.Namespace == ns {
+			// skip mutation
+			return nil, nil
+		}
+	}
+
 	var podName string
 	if pod.Name != "" {
 		podName = pod.Name
