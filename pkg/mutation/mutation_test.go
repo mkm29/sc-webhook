@@ -12,15 +12,29 @@ import (
 )
 
 func TestMutatePodPatch(t *testing.T) {
-	m := NewMutator(logger())
-	got, err := m.MutatePodPatch(pod())
-	if err != nil {
-		t.Fatal(err)
-	}
+	t.Run("mutate security context", func(t *testing.T) {
+		m := NewMutator(logger())
+		got, err := m.MutatePodPatch(pod())
+		if err != nil {
+			t.Fatal(err)
+		}
 
-	p := patch()
-	g := string(got)
-	assert.Equal(t, p, g)
+		p := patch()
+		g := string(got)
+		assert.Equal(t, p, g)
+	})
+
+	t.Run("protected namespace do not mutate", func(t *testing.T) {
+		m := NewMutator(logger())
+		p := pod()
+		p.ObjectMeta.Namespace = "kube-system"
+		got, err := m.MutatePodPatch(p)
+		if err != nil {
+			t.Fatal(err)
+		}
+		// should be nil
+		assert.Nil(t, got)
+	})
 }
 
 func BenchmarkMutatePodPatch(b *testing.B) {
@@ -54,8 +68,8 @@ func pod() *corev1.Pod {
 
 func patch() string {
 	patch := `[
-			{"op":"add","path":"/spec/securityContext","value":
-				{"runAsNonRoot":true}
+			{"op":"add","path":"/spec/containers/0/securityContext","value":
+				{"allowPrivilegeEscalation":false,"privileged":false,"runAsNonRoot":true}
 			}
 ]`
 

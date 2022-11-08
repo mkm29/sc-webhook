@@ -44,7 +44,7 @@ func (a Admitter) MutatePodReview() (*admissionv1.AdmissionReview, error) {
 
 // MutatePodReview takes an admission request and validates the pod within
 // it returns an admission review
-func (a Admitter) ValidatePodReview() (*admissionv1.AdmissionReview, error) {
+func (a Admitter) ValidatePodReview(validateImage bool, validateScc bool) (*admissionv1.AdmissionReview, error) {
 	pod, err := a.Pod()
 	if err != nil {
 		e := fmt.Sprintf("could not parse pod in admission review request: %v", err)
@@ -52,7 +52,14 @@ func (a Admitter) ValidatePodReview() (*admissionv1.AdmissionReview, error) {
 	}
 
 	v := validation.NewValidator(a.Logger)
-	val, err := v.ValidatePod(pod)
+	validations := []validation.PodValidator{}
+	if validateImage {
+		validations = append(validations, validation.ImageValidator{v.Logger})
+	}
+	if validateScc {
+		validations = append(validations, validation.SecurityContextValidator{v.Logger})
+	}
+	val, err := v.ValidatePod(pod, validations)
 	if err != nil {
 		e := fmt.Sprintf("could not validate pod: %v", err)
 		return reviewResponse(a.Request.UID, false, http.StatusBadRequest, e), err

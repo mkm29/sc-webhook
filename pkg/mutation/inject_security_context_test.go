@@ -3,6 +3,7 @@ package mutation
 import (
 	"testing"
 
+	"github.com/mkm29/sc-webhook/pkg/utils"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -69,7 +70,7 @@ func TestHasSecurityContext(t *testing.T) {
 		},
 		Spec: corev1.PodSpec{
 			Containers: []corev1.Container{
-				corev1.Container{
+				{
 					Name:  "test",
 					Image: "busybox",
 				},
@@ -86,6 +87,6 @@ func TestHasSecurityContext(t *testing.T) {
 		},
 	}
 
-	assert.True(t, HasValidSecurityContext(py))
-	assert.False(t, HasValidSecurityContext(pn))
+	assert.True(t, utils.HasValidSecurityContext(py))
+	assert.False(t, utils.HasValidSecurityContext(pn))
 }

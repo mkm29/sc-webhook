@@ -2,9 +2,9 @@ package validation
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
+	"github.com/mkm29/sc-webhook/pkg/utils"
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 )
@@ -12,38 +12,41 @@ import (
 const REGISTRY = "REGISTRY"
 
 // imageValidator is a container for validating the name of pods
-type imageValidator struct {
+type ImageValidator struct {
 	Logger logrus.FieldLogger
 }
 
 // imageValidator implements the podValidator interface
-var _ podValidator = (*imageValidator)(nil)
+var _ PodValidator = (*ImageValidator)(nil)
 
 // Name returns the name of imageValidator
-func (n imageValidator) Name() string {
+func (n ImageValidator) Name() string {
 	return "image_source_validator"
 }
 
-// get REGISTRY from environment variable
-func GetRegistry() (string, bool) {
-	// first see if the key is present
-	val, ok := os.LookupEnv(REGISTRY)
+func getRegistry() string {
+	registry, ok := utils.GetEnvironmentVariable(REGISTRY)
 	if !ok {
-		return "", false
+		return ""
 	}
-	return val, true
+	return registry
 }
 
 // Validate inspects the security context of a given pod and returns validation.
 // The returned validation is only valid if the pod has a valid security context
 // that is configured to not run as root
-func (n imageValidator) Validate(pod *corev1.Pod) (validation, error) {
+func (n ImageValidator) Validate(pod *corev1.Pod) (validation, error) {
 	v := validation{}
-	// get approved registry from environment variable
-	registry, ok := GetRegistry()
-	if !ok {
-		return v, fmt.Errorf(fmt.Sprintf("%s environment variable is not set", REGISTRY))
+	// get list of namespaces to ignore
+	xns := utils.GetExcludedNamespaces()
+	// check if the pod is in the excluded namespaces
+	for _, ns := range xns {
+		if pod.ObjectMeta.Namespace == ns {
+			return validation{Valid: true, Reason: fmt.Sprintf("pod is in protected namespace: %s", ns)}, nil
+		}
 	}
+	// get approved registry from environment variable
+	registry := getRegistry()
 	// check if the image comes from a certain registry
 	for _, container := range pod.Spec.Containers {
 		if !strings.Contains(container.Image, registry) {

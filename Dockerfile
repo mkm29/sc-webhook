@@ -15,10 +15,12 @@ RUN --mount=type=cache,target=/root/.cache/go-build,sharing=private \
 # ---
 FROM scratch AS run
 
-ARG REGISTRY="docker.io"
+ARG REGISTRY=""
+ARG EXCLUDE_NAMESPACES="kube-system,kube-public,kube-node-lease"
 
 COPY --from=build /work/bin/admission-webhook /usr/local/bin/
 
-ENV REGISTRY="$REGISTRY"
+ENV REGISTRY="$REGISTRY" \
+  EXCLUDE_NAMESPACES="$EXCLUDE_NAMESPACES"
 
 CMD ["admission-webhook"]

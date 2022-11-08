@@ -1,6 +1,7 @@
 package validation
 
 import (
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -29,7 +30,7 @@ func TestNSecurityContextValidatorValidate(t *testing.T) {
 			},
 		}
 
-		v, err := securityContextValidator{logger()}.Validate(pod)
+		v, err := SecurityContextValidator{logger()}.Validate(pod)
 		assert.Nil(t, err)
 		assert.True(t, v.Valid)
 	})
@@ -47,8 +48,35 @@ func TestNSecurityContextValidatorValidate(t *testing.T) {
 			},
 		}
 
-		v, err := securityContextValidator{logger()}.Validate(pod)
+		v, err := SecurityContextValidator{logger()}.Validate(pod)
 		assert.Nil(t, err)
 		assert.False(t, v.Valid)
+	})
+
+	t.Run("Pod in kube-system namespace", func(t *testing.T) {
+		os.Setenv("EXCLUDE_NAMESPACES", "kube-system")
+		trueVal := true
+		falseVal := false
+		pod := &corev1.Pod{
+			ObjectMeta: v1.ObjectMeta{
+				Name:      "securePod",
+				Namespace: "kube-system",
+			},
+			Spec: corev1.PodSpec{
+				Containers: []corev1.Container{{
+					Name:  "secureContainer",
+					Image: "busybox",
+					SecurityContext: &corev1.SecurityContext{
+						RunAsNonRoot:             &trueVal,
+						AllowPrivilegeEscalation: &falseVal,
+						Privileged:               &falseVal,
+					},
+				}},
+			},
+		}
+
+		v, err := SecurityContextValidator{logger()}.Validate(pod)
+		assert.Nil(t, err)
+		assert.True(t, v.Valid)
 	})
 }

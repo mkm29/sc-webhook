@@ -16,8 +16,9 @@ func main() {
 	setLogger()
 
 	// handle our core application
-	http.HandleFunc("/validate", ServeValidatePods)
-	http.HandleFunc("/mutate", ServeMutatePods)
+	http.HandleFunc("/validate/image", ServeValidatePodImage)
+	http.HandleFunc("/validate/securitycontext", ServeValidatePodSecurityContext)
+	http.HandleFunc("/mutate/securitycontext", ServeMutatePodSecurityContext)
 	http.HandleFunc("/health", ServeHealth)
 
 	// start the server
@@ -39,9 +40,10 @@ func ServeHealth(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "OK")
 }
 
+// todo: Lots of code duplication here, refactor 2 validate methods
 // ServeValidatePods validates an admission request and then writes an admission
 // review to `w`
-func ServeValidatePods(w http.ResponseWriter, r *http.Request) {
+func ServeValidatePodImage(w http.ResponseWriter, r *http.Request) {
 	logger := logrus.WithField("uri", r.RequestURI)
 	logger.Debug("received validation request")
 
@@ -57,7 +59,47 @@ func ServeValidatePods(w http.ResponseWriter, r *http.Request) {
 		Request: in.Request,
 	}
 
-	out, err := adm.ValidatePodReview()
+	out, err := adm.ValidatePodReview(true, false)
+	if err != nil {
+		e := fmt.Sprintf("could not generate admission response: %v", err)
+		logger.Error(e)
+		http.Error(w, e, http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	jout, err := json.Marshal(out)
+	if err != nil {
+		e := fmt.Sprintf("could not parse admission response: %v", err)
+		logger.Error(e)
+		http.Error(w, e, http.StatusInternalServerError)
+		return
+	}
+
+	logger.Debug("sending response")
+	logger.Debugf("%s", jout)
+	fmt.Fprintf(w, "%s", jout)
+}
+
+// ServeValidatePods validates an admission request and then writes an admission
+// review to `w`
+func ServeValidatePodSecurityContext(w http.ResponseWriter, r *http.Request) {
+	logger := logrus.WithField("uri", r.RequestURI)
+	logger.Debug("received validation request")
+
+	in, err := parseRequest(*r)
+	if err != nil {
+		logger.Error(err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	adm := admission.Admitter{
+		Logger:  logger,
+		Request: in.Request,
+	}
+
+	out, err := adm.ValidatePodReview(false, true)
 	if err != nil {
 		e := fmt.Sprintf("could not generate admission response: %v", err)
 		logger.Error(e)
@@ -81,7 +123,7 @@ func ServeValidatePods(w http.ResponseWriter, r *http.Request) {
 
 // ServeMutatePods returns an admission review with pod mutations as a json patch
 // in the review response
-func ServeMutatePods(w http.ResponseWriter, r *http.Request) {
+func ServeMutatePodSecurityContext(w http.ResponseWriter, r *http.Request) {
 	logger := logrus.WithField("uri", r.RequestURI)
 	logger.Debug("received mutation request")
 

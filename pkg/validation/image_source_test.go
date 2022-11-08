@@ -13,11 +13,8 @@ import (
 func TestNImageValidatorValidate(t *testing.T) {
 	t.Run("valid image sources", func(t *testing.T) {
 		// set the REGISTRY environment variable
-		ev, ok := GetRegistry()
-		if !ok {
-			t.Errorf("%s environment variable is not set", REGISTRY)
-		}
-		os.Setenv(REGISTRY, ev)
+		os.Setenv(REGISTRY, "private.docker.io")
+		ev := getRegistry()
 		containers := []corev1.Container{
 			{
 				Name:  "good-container-1",
@@ -37,16 +34,14 @@ func TestNImageValidatorValidate(t *testing.T) {
 			},
 		}
 
-		v, err := imageValidator{logger()}.Validate(pod)
+		v, err := ImageValidator{logger()}.Validate(pod)
 		assert.Nil(t, err)
 		assert.True(t, v.Valid)
 	})
 
 	t.Run("image not from an approved registry", func(t *testing.T) {
-		ev, ok := GetRegistry()
-		if !ok {
-			t.Errorf("%s environment variable is not set", REGISTRY)
-		}
+		os.Setenv(REGISTRY, "private.docker.io")
+		ev := getRegistry()
 		os.Setenv(REGISTRY, ev)
 		// define 2 containers
 		containers := []corev1.Container{
@@ -68,8 +63,33 @@ func TestNImageValidatorValidate(t *testing.T) {
 			},
 		}
 
-		v, err := securityContextValidator{logger()}.Validate(pod)
+		v, err := SecurityContextValidator{logger()}.Validate(pod)
 		assert.Nil(t, err)
 		assert.False(t, v.Valid)
+	})
+}
+
+func TestExcludeNamespacePod(t *testing.T) {
+	t.Run("Pod in kube-system namespace", func(t *testing.T) {
+		os.Setenv("EXCLUDE_NAMESPACES", "kube-system")
+		containers := []corev1.Container{
+			{
+				Name:  "good-container-1",
+				Image: "busybox",
+			},
+		}
+		pod := &corev1.Pod{
+			ObjectMeta: v1.ObjectMeta{
+				Name:      "approved-pod",
+				Namespace: "kube-system",
+			},
+			Spec: corev1.PodSpec{
+				Containers: containers,
+			},
+		}
+
+		v, err := ImageValidator{logger()}.Validate(pod)
+		assert.Nil(t, err)
+		assert.True(t, v.Valid)
 	})
 }
